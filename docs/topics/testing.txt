@@ -846,6 +846,36 @@ arguments at time of construction:
 
         The ``extra`` argument acts the same as for :meth:`Client.get`.
 
+    .. admonition:: Testing RESTful web services
+
+       Since web browsers are only designed to perform **GET** and **POST**
+       requests, the :attr:`~django.http.HttpRequest.POST` variable won't be accessible if you
+       performed a request with a http verb that is not **POST**, even if the
+       request body is url encoded.
+
+       To access the submitted data, you need to use the
+       :attr:`~django.http.HttpRequest.raw_post_data`, which contains the
+       raw body of the HTTP request.
+
+       If you know the incoming request will be **x-www-form-urlencoded** or
+       **multipart/form-data** encoded, you can use the following method::
+
+            from cStringIO import StringIO
+            from django.http import QueryDict
+            from django.http.multipartparser import MultiPartParser
+
+
+            def parse_put_data(request):
+                content_type = request.META.get('CONTENT_TYPE')
+                if content_type.startswith('multipart'):
+                    parser = MultiPartParser(request.META, StringIO(request.raw_post_data), [], request.encoding)
+                    post, files = parser.parse()
+                else:
+                    post = QueryDict(request.raw_post_data)
+                return post
+
+
+
     .. method:: Client.login(**credentials)
 
         If your site uses Django's :doc:`authentication system</topics/auth>`
